@@ -5,6 +5,7 @@
 #include <SDL2/SDL.h>
 #include <bullet3/btBulletDynamicsCommon.h>
 
+#include <iostream>
 #include <fstream>
 #include <thread>
 #include <random>
@@ -15,14 +16,14 @@ using namespace Needle;
 struct Info final {
     static constexpr btScalar a = 3.55f;
     static constexpr btScalar l = 1.13f;
-    static constexpr unsigned round = 3408;
-    static constexpr unsigned lineNum = 10;
-    static constexpr btScalar len = 20; // x
-    static constexpr btScalar wid = 10; // z
-    static constexpr std::pair<btScalar, btScalar> h = {7, 16};
-    static constexpr std::pair<btScalar, btScalar> fz = {0, 90};
-    static constexpr std::pair<btScalar, btScalar> fy = {0, 90};
-    static constexpr std::pair<btScalar, btScalar> fx = {0, 300};
+    static constexpr unsigned round = 1000;
+    static constexpr unsigned lineNum = 15;
+    static constexpr btScalar len = 25; // x
+    static constexpr btScalar wid = 15; // z
+    static constexpr std::pair<btScalar, btScalar> h = {5, 15};
+    static constexpr std::pair<btScalar, btScalar> fz = {0, 250};
+    static constexpr std::pair<btScalar, btScalar> fy = {0, 100};
+    static constexpr std::pair<btScalar, btScalar> fx = {0, 450};
 };
 
 auto addObjs(World& _world) {
@@ -31,12 +32,11 @@ auto addObjs(World& _world) {
     trans.setIdentity();
     trans.setOrigin({0, -.5, 0});
     auto ground = _world.addRb(0, trans, new btBoxShape({Info::len, .5, Info::wid}));
-    ground->setRestitution(0);
 
     auto x = -(Info::lineNum / 2 * Info::a);
     trans.setIdentity();
     for(auto i = 0u; i < Info::lineNum; ++i) {
-        trans.setOrigin({x + i * Info::a, .21f, 0});
+        trans.setOrigin({x + i * Info::a, .22f, 0});
         auto line = _world.addRb(0, trans, new btBoxShape({.005f, .2f, Info::wid}));
         line->setCollisionFlags(btCollisionObject::CollisionFlags::CF_NO_CONTACT_RESPONSE);
         line->setCustomDebugColor({0, 0, 1});
@@ -44,9 +44,11 @@ auto addObjs(World& _world) {
 
     trans.setIdentity();
     trans.setOrigin({0, -10, 0});
-    auto needle = _world.addRb(1, trans, new btCapsuleShapeX(.08, Info::l));
+    auto needle = _world.addRb(1, trans, new btBoxShape({Info::l / 2, .1, .1})); // new btCapsuleShapeX(.1, Info::l - 2 * .1)
+    needle->setFriction(.1);
+    //needle->setRollingFriction(100);
+    //needle->setSleepingThresholds(.2, .5);
     needle->setActivationState(DISABLE_DEACTIVATION);
-    needle->setRestitution(0);
 
     return needle;
 }
@@ -59,7 +61,7 @@ int main(int argc, char* argv[]) {
 
     std::mt19937 rng(time(nullptr));
     std::uniform_real_distribution<float> hDist(Info::h.first, Info::h.second);
-    std::uniform_real_distribution<float> xDist(-Info::l, Info::l);
+    std::uniform_real_distribution<float> xDist(-Info::l / 2, Info::l / 2);
     std::uniform_real_distribution<float> fzDist(Info::fz.first, Info::fz.second);
     std::uniform_real_distribution<float> fyDist(Info::fy.first, Info::fy.second);
     std::uniform_real_distribution<float> fxDist(Info::fx.first, Info::fx.second);
@@ -123,13 +125,15 @@ int main(int argc, char* argv[]) {
 
         btVector3 aabbMin, aabbMax;
         needle->getAabb(aabbMin, aabbMax);
-        //                   magic numbers
-        if(aabbMax.y() < 2 * (.08 + 1e-4)) {
+        //                                            magic number
+        if(needle->getWorldTransform().getOrigin().y() < (.15)) {
             bool isCross = static_cast<int>(ceil(aabbMin.x() / Info::a)) == static_cast<int>(floor(aabbMax.x() / Info::a));
             if(isCross)
                 ++totalCross;
+            std::cout << round << ',' << isCross << ',' << totalCross << ','
+                << (2 * round * Info::l / (Info::a * totalCross)) << std::endl;
             file << round << ',' << isCross << ',' << totalCross << ','
-                << (2 * Info::l * round / (Info::a * totalCross)) << std::endl;
+                << (2 * round * Info::l / (Info::a * totalCross)) << std::endl;
             nextRound = true;
         }
     }

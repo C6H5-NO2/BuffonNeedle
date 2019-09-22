@@ -84,10 +84,8 @@ namespace Needle {
             using namespace glm;
             auto identity = mat4x4(1),
                  model = identity,
-                 view = lookAt(vec3(3, 9, 15), {0, 0, 0}, {0, 1, 0}),
+                 view = lookAt(vec3(0, 23, 30), {0, 0, 0}, {0, 1, 0}),
                  projection = perspective(radians(75.f), 800.f / 600.f, .1f, 100.f);
-            //view = translate(view, vec3(0, 2, -3));
-            //view = rotate(view, radians(y), {0, 1, 0});
             mProgram->setUniform("model", model);
             mProgram->setUniform("view", view);
             mProgram->setUniform("projection", projection);
