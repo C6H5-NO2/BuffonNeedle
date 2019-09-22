@@ -25,7 +25,7 @@ namespace Needle {
         SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 3);
         SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_CORE);
 
-        mWindow.reset(SDL_CreateWindow("Buffon's Needle Simulation ---- C6H5-NO2",
+        mWindow.reset(SDL_CreateWindow("Buffon's Needle Simulation    by C6H5-NO2",
                                        SDL_WINDOWPOS_CENTERED,
                                        SDL_WINDOWPOS_CENTERED,
                                        800,
@@ -82,13 +82,12 @@ namespace Needle {
 
         {
             using namespace glm;
-            static float y = 0, delY = 1;
-            auto identity = mat4x4(1), model = identity, view = identity, projection = identity;
-            view = lookAt(vec3(1, 1, 3), {0, 0, 0}, {0, 1, 0});
+            auto identity = mat4x4(1),
+                 model = identity,
+                 view = lookAt(vec3(3, 9, 15), {0, 0, 0}, {0, 1, 0}),
+                 projection = perspective(radians(75.f), 800.f / 600.f, .1f, 100.f);
             //view = translate(view, vec3(0, 2, -3));
             //view = rotate(view, radians(y), {0, 1, 0});
-            projection = perspective(radians(45.f), 800.f / 600.f, .1f, 100.f);
-            y += delY;
             mProgram->setUniform("model", model);
             mProgram->setUniform("view", view);
             mProgram->setUniform("projection", projection);
